@@ -1,5 +1,6 @@
 # -*- coding: utf-8 -*-
 from args import options
+from args import games
 import aerospike
 from aerospike import exception
 from aerospike_helpers.batch import records as br
@@ -19,14 +20,12 @@ except exception.ClientError as e:
     print(e)
     sys.exit(1)
 
-
 def print_scores(game, scores):
     print("{}\n=============".format(game))
     hi_to_low = reversed(scores)
     for i in hi_to_low:
         print("user {}: {}".format(next(hi_to_low), i))
     print()
-
 
 policy = {"key": aerospike.POLICY_KEY_SEND}
 map_policy = {
@@ -47,12 +46,6 @@ for record in res:
         personal_best[game] = b["account"]["scores"][game]["top"]
     print("{}: {}".format(user, personal_best))
 
-games = [
-    "pacman",
-    "asteroids",
-    "donkey-kong",
-    "mortal-kombat",
-]
 print("\nGet the top 3 high scores for the games:")
 ops = [mh.map_get_by_rank_range("scores", -3, 3, aerospike.MAP_RETURN_KEY_VALUE)]
 batch = []

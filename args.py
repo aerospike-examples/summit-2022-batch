@@ -63,3 +63,10 @@ if options.help:
     argparser.print_help()
     print()
     sys.exit()
+
+games = [
+    "pacman",
+    "asteroids",
+    "donkey-kong",
+    "mortal-kombat",
+]

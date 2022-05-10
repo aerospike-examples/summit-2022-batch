@@ -1,5 +1,6 @@
 # -*- coding: utf-8 -*-
 from args import options
+from args import games
 import aerospike
 from aerospike import exception
 from aerospike_helpers.batch import records as br
@@ -30,10 +31,8 @@ map_policy = {
     "map_order": aerospike.MAP_KEY_ORDERED,
 }
 
-
 def to_day(ts):
     return dt.datetime.utcfromtimestamp(ts).strftime("%Y%m%d")
-
 
 def rand_ts(start, end):
     if (end - start) < 3600:
@@ -43,14 +42,7 @@ def rand_ts(start, end):
     except Exception as e:
         print(start, end, e)
 
-
 alnum = string.ascii_uppercase + string.digits
-games = [
-    "pacman",
-    "asteroids",
-    "donkey-kong",
-    "mortal-kombat",
-]
 top_overall = {}
 top_monthly = {}
 top_daily = {}
@@ -58,7 +50,6 @@ for game in games:
     top_overall[game] = {}
     top_monthly[game] = {}
     top_daily[game] = {}
-
 
 def gen_user(pk):
     last_seen = rand_ts(1622530800, 1651733999)  # 20210601 to 20220504
@@ -90,7 +81,6 @@ def gen_user(pk):
         }
     user = {"last-seen": to_day(last_seen), "scores": scores}
     return user
-
 
 timer_on = time.perf_counter_ns()
 for u in range(2500):

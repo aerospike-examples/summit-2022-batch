@@ -1,5 +1,6 @@
 # -*- coding: utf-8 -*-
 from args import options
+from args import games
 import aerospike
 from aerospike import exception
 from aerospike_helpers.batch import records as br
@@ -32,18 +33,8 @@ def to_day(ts):
 def to_minute(ts):
     return dt.datetime.utcfromtimestamp(ts).strftime("%Y%m%d%H%M")
 
-games = [
-    "pacman",
-    "asteroids",
-    "donkey-kong",
-    "mortal-kombat",
-]
-
 # every minute update the leaderboards based on the unprocessed minute buckets
 now = 1651824999
-#minutes = []
-#for i in range(now, now - 3600, -60):
-#    minutes.append(to_minute(i))
 batch = []
 ops = [oh.read("scores")]
 for game in games:
