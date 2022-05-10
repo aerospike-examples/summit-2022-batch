@@ -11,7 +11,7 @@ Companion code for the Aerospike Summit 2022 roadshow presentation "Building wit
 The presentation mentions which scripts are being run for each slide. The
 sequence is as follows:
 
- 1. `fill.py` to fill the database with sample data
+ 1. `fill.py` to fill the database with sample data using single and batch writes
  2. `batch-reads.py` to demonstrate batch reading of records and batch read-operations over multiple records
- 3. `new-score.py` to demonstrate updating records with write expressions
- 4. `update-leaderboard.py` to demonstrate batch reads leading into batch writes
+ 3. `new-score.py` to demonstrate updating records with read and write expressions
+ 4. `update-leaderboard.py` to demonstrate rolling up staged personal-best scores into top scores with batch reads and then batch writes
