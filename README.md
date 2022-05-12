@@ -15,3 +15,24 @@ sequence is as follows:
  2. `batch-reads.py` to demonstrate batch reading of records and batch read-operations over multiple records
  3. `new-score.py` to demonstrate updating records with read and write expressions
  4. `update-leaderboard.py` to demonstrate rolling up staged personal-best scores into top scores with batch reads and then batch writes
+
+## Options
+All the scripts support the following options:
+
+```
+optional arguments:
+  --help                Displays this message.
+  -U <USERNAME>, --username <USERNAME>
+                        Username to connect to database.
+  -P <PASSWORD>, --password <PASSWORD>
+                        Password to connect to database.
+  -h <ADDRESS>, --host <ADDRESS>
+                        Address of Aerospike server.
+  -p <PORT>, --port <PORT>
+                        Port of the Aerospike server.
+  -n <NS>, --namespace <NS>
+                        Namespace name to use
+  -s <SET>, --set <SET>
+                        Set name to use.
+  --services-alternate  Use services alternate
+```
