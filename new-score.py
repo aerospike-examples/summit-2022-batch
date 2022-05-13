@@ -31,6 +31,7 @@ map_policy = {
     "map_order": aerospike.MAP_KEY_ORDERED,
 }
 
+
 def to_day(ts):
     return dt.datetime.utcfromtimestamp(ts).strftime("%Y%m%d")
 
@@ -38,19 +39,33 @@ def to_day(ts):
 def to_minute(ts):
     return dt.datetime.utcfromtimestamp(ts).strftime("%Y%m%d%H%M")
 
+
 # new score comes in as the following JSON
 new = {"game": "pacman", "score": 123456, "user": "user100", "ts": 1651824999}
 key = (ns, options.set, new["user"])
 
+# true if there is no top score, or new score > existing score
 top_value_exp = exp.Cond(
-    exp.GT(
-        new["score"],
-        exp.MapGetByKey(
-            [ctx.cdt_ctx_map_key("scores"), ctx.cdt_ctx_map_key(new["game"])],
-            aerospike.MAP_RETURN_VALUE,
-            exp.ResultType.INTEGER,
-            "top",
-            exp.MapBin("account"),
+    exp.Or(
+        exp.Eq(
+            exp.MapGetByKey(
+                [ctx.cdt_ctx_map_key("scores"), ctx.cdt_ctx_map_key(new["game"])],
+                aerospike.MAP_RETURN_COUNT,
+                exp.ResultType.INTEGER,
+                "top",
+                exp.MapBin("account"),
+            ),
+            0,
+        ),
+        exp.GT(
+            new["score"],
+            exp.MapGetByKey(
+                [ctx.cdt_ctx_map_key("scores"), ctx.cdt_ctx_map_key(new["game"])],
+                aerospike.MAP_RETURN_VALUE,
+                exp.ResultType.INTEGER,
+                "top",
+                exp.MapBin("account"),
+            ),
         ),
     ),
     exp.MapPut(
@@ -63,25 +78,47 @@ top_value_exp = exp.Cond(
     exp.Unknown(),
 ).compile()
 
-is_highscore_exp = exp.GT(
-    new["score"],
-    exp.MapGetByKey(
-        [ctx.cdt_ctx_map_key("scores"), ctx.cdt_ctx_map_key(new["game"])],
-        aerospike.MAP_RETURN_VALUE,
-        exp.ResultType.INTEGER,
-        "top",
-        exp.MapBin("account"),
+# highscore=true if there is no such game or the new score > existing score
+is_highscore_exp = exp.Or(
+    exp.Eq(
+        exp.MapGetByKey(
+            [ctx.cdt_ctx_map_key("scores")],
+            aerospike.MAP_RETURN_COUNT,
+            exp.ResultType.INTEGER,
+            new["game"],
+            exp.MapBin("account"),
+        ),
+        0,
+    ),
+    exp.Eq(
+        exp.MapGetByKey(
+            [ctx.cdt_ctx_map_key("scores"), ctx.cdt_ctx_map_key(new["game"])],
+            aerospike.MAP_RETURN_COUNT,
+            exp.ResultType.INTEGER,
+            "top",
+            exp.MapBin("account"),
+        ),
+        0,
+    ),
+    exp.GT(
+        new["score"],
+        exp.MapGetByKey(
+            [ctx.cdt_ctx_map_key("scores"), ctx.cdt_ctx_map_key(new["game"])],
+            aerospike.MAP_RETURN_VALUE,
+            exp.ResultType.INTEGER,
+            "top",
+            exp.MapBin("account"),
+        ),
     ),
 ).compile()
 
 ops = [
-    opexp.expression_read("new_top", is_highscore_exp),
     mh.map_put("account", "last-seen", to_day(new["ts"]), map_policy),
     mh.map_put(
         "account",
         "last-played",
         to_day(new["ts"]),
-        ctx=[ctx.cdt_ctx_map_key("scores"), ctx.cdt_ctx_map_key(new["game"])],
+        ctx=[ctx.cdt_ctx_map_key("scores"), ctx.cdt_ctx_map_key_create(new["game"])],
     ),
     mh.map_increment(
         "account",
@@ -89,6 +126,7 @@ ops = [
         1,
         ctx=[ctx.cdt_ctx_map_key("scores"), ctx.cdt_ctx_map_key(new["game"])],
     ),
+    opexp.expression_read("new_top", is_highscore_exp),
     opexp.expression_write("account", top_value_exp, aerospike.EXP_WRITE_EVAL_NO_FAIL),
 ]
 _, _, b = client.operate(key, ops, policy=policy)
